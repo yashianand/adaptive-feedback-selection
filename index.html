@@ -102,7 +102,7 @@
               </span>
               <!-- Appendix Link. -->
               <span class="link-block">
-                <a href="https://docs.google.com/document/d/1C5CjoZ7C2BWepB552S-cfYxe9NfS07l9mdivnpH1J14/edit?usp=share_link"
+                <a href="./static/papers/Appendix.pdf"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="far fa-images"></i>
@@ -214,11 +214,16 @@
   </div>
 </section> -->
 
-
 <footer class="footer">
     <div class="columns is-centered">
       <div class="column is-8">
         <div class="content">
+          <div class="is-size-6 has-text-grey">
+            <p id="last-modified"></p>
+            </div>
+            <script>
+            document.getElementById('last-modified').textContent = 'Last modified: ' + new Date(document.lastModified).toLocaleDateString();
+            </script>
           <p>
             This project website was built using this <a
             href="https://github.com/nerfies/nerfies.github.io">source code</a>.
