@@ -1,2 +1,137 @@
 .DS_store
 .idea
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+          Learning from human feedback is a popular approach to train robots to
+          adapt to user preferences and improve safety. Existing approaches
+          typically consider a single querying (interaction) format when seeking
+          human feedback and do not leverage multiple modes of user interaction
+          with a robot. We examine how to learn a penalty function associated
+          with unsafe behaviors using <i>multiple</i> forms of human feedback,
+          by optimizing the <i>query state</i> and <i>feedback format</i>.
+          Our proposed <i>adaptive feedback selection</i> is an iterative,
+          two-phase approach which first selects
+          critical states for querying, and then uses information gain to
+          select a feedback format for querying across the sampled critical
+          states. The feedback format selection also accounts for the cost and
+          probability of receiving feedback in a certain format.
+         </p>
+          <p>
+            Our experiments in simulation demonstrate the sample efficiency of
+            our approach in learning to avoid undesirable behaviors. The results
+            of our user study with a physical robot highlight the practicality
+            and effectiveness of adaptive feedback selection in seeking
+            informative, user-aligned feedback that accelerate learning.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+    <hr style="margin: 0.5rem 0; border: 1px solid #ccc;">
+    <!-- Overview. -->
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <div class="hero-body">
+            <h2 class="title is-3">Overview of the Solution Approach</h2>
+            <img src="./static/images/framework_overview.png" alt="Overview of Adaptive Feedback Selection" style="max-width: 120%; height: auto; margin-left: -10%;">
+            <div class="content has-text-justified">
+            <p style="font-size: larger !important;">
+              The critical states \( \Omega \) for querying are selected by
+              clustering the states. A feedback format \(f^*\) that maximizes
+              information gain is selected for querying the user across \( \Omega \).
+              The NSE model is iteratively refined based on feedback. An updated
+              policy is calculated using a penalty function \( \hat{R}_N \), derived
+              from the learned NSE model.
+            </p>
+            <h3 style="text-align: left !important; margin-left: -10%; text-decoration: underline;">1. Critical States Selection</h3>
+            <img src="./static/images/cs_selection.png" alt="Critical States Selection" style="max-width: 100%; height: auto; margin-left: -10%;">
+            <h3 style="text-align: left !important; margin-left: -10%; text-decoration: underline;">2. Feedback Format Selection</h3>
+            <img src="./static/images/ff_selection.png" alt="Feedback Format Selection" style="max-width: 100%; height: auto; margin-left: -10%;">
+            <h3 style="text-align: left !important; margin-left: -10%; text-decoration: underline;">3. Stopping Criteria</h3>
+            <img src="./static/images/stopping_criteria.png" alt="Stopping Criteria" style="max-width: 100%; height: auto; margin-left: -10%;">
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--/ Overview. -->
+
+    <hr style="margin: 0rem 0; border: 1px solid #ccc;">
+    <!-- Simulation Experiments -->
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <div class="hero-body">
+            <h2 class="title is-3">Experiments in Simulation</h2>
+            <h3 style="text-align: left !important; margin-left: -10%; font-size: larger !important;"><span style="font-weight: bold;">Primary Task:</span> To optimize shortest distance to the destination</h3>
+             <p style="text-align: left !important; margin-left: -10%;"><span style="font-weight: bold;">Baselines used:</span></p>
+             <ul style="text-align: left !important; margin-left: -5%;">
+              <li><i style="font-weight: bold;">(i) Naive Agent:</i> Executes main policy without learning about NSEs (upper bound on NSE penalty).</li>
+              <li><i style="font-weight: bold;">(ii) Oracle:</i> Has full knowledge of $R^T$ and $R^N$ (lower bound on NSE penalty).</li>
+              <li><i style="font-weight: bold;">(iii) Reward Inference (RI):</i> Learns via first modeling $\beta$ <a href="https://arxiv.org/abs/2208.10687">(Ghosal et al., 2023)</a>.</li>
+              <li><i style="font-weight: bold;">(iv) Cost-Sensitive:</i> Chooses feedback with the lowest cost given the feedback preference model $D$.</li>
+              <li><i style="font-weight: bold;">(v) Most-Probable Feedback:</i> Selects the feedback format most likely preferred by the human.</li>
+              <li><i style="font-weight: bold;">(vi) Random Critical States:</i> Uses AFS to learn about NSEs, while sampling critical states randomly.</li>
+             </ul>
+
+            <h3 style="text-align: left !important; margin-left: -10%; font-size: medium !important; font-weight: bold;">Domains</h3>
+            <img src="./static/images/domains_in_sim.png" alt="Domains used in Sim" style="max-width: 100%; height: auto; margin-left: -10%;">
+
+            <h3 style="text-align: left !important; margin-left: -10%; font-size: medium !important; font-weight: bold;">Results</h3>
+
+            <p style="text-align: left !important; margin-left: -10%;">1. Average penalty across 100 trials</p>
+            <img src="./static/images/results_in_sim.png" alt="Average NSE penalty across 100 trials in Sim" style="max-width: 100%; height: auto; margin-left: -10%;">
+
+            <p style="text-align: left !important; margin-left: -10%;">2. Average penalty with different clustering algorithms and number of clusters ($K$)</p>
+            <img src="./static/images/diff_clusters_in_sim.png" alt="Average penalty with different clustering methods" style="max-width: 100%; height: auto; margin-left: -10%;">
+
+            <p style="text-align: left !important; margin-left: -10%;">3. Average penalty incurred by AFS operating with and without the stopping criteria</p>
+            <img src="./static/images/stopping_criteria_penalty.png" alt="Average penalty with different stopping criteria" style="max-width: 50%; height: auto; margin-left: -10%;">
+
+            <h2 class="title is-3">Human Subjects Study in Simulation</h2>
+            <img src="./static/images/vase_user_study.png" alt="Average penalty in the human subjects study in simulation" style="max-width: 80%; height: auto; margin-left: -10%;">
+            <p style="text-align: left !important; margin-left: -10%;">
+              In this study, participants (N=12) interacted with a simulated autonomous
+              agent in the Vase domain to provide feedback across multiple formats through a GUI.
+              The agent learned to minimize negative side effects
+              (NSEs) while completing primary task.
+              The figure above shows both the simulation setup and the learned
+              performance, with results highlighting how adaptive querying
+              reduces the average NSE penalty.
+            </p>
+
+            <h2 class="title is-3 margin-left: -10%;">In-Person User Study with Kinova Gen3 7DoF Arm</h2>
+            <img src="./static/images/kinova_user_study.png" alt="In-person user study setup with Kinova Gen3 7DoF arm" style="max-width: 100%; height: auto; margin-left: -10%;">
+            <p style="text-align: left !important; margin-left: -10%;">
+              Extending the simulation results to a real-world setting, this
+              study evaluated human–robot interaction using a Kinova Gen3 7-DoF
+              arm performing household-style object delivery tasks. Participants (N=30)
+              provided feedback either via a GUI or by physically
+              guiding the robot.
+              The figure above shows the in-person user study setup with Kinova Gen3 7DoF arm.
+            </p>
+            <img src="./static/images/kinova_results.png" alt="Results from the in-person user study setup with Kinova Gen3 7DoF arm" style="max-width: 100%; height: auto; margin-left: -10%;">
+            <p style="text-align: left !important; margin-left: -10%;">
+              Performance metrics show consistent NSE mitigation and strong user alignment with the adaptive feedback
+              strategy. Qualitative measures (trust, competence (RoSAS), and workload (NASA-TLX)) demonstrate that the adaptive approach
+              maintained safety and efficiency without increasing user effort.
+            </p>
+
+
+            <div class="content has-text-justified">
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--/ Simulation Experiments -->
+</section>
