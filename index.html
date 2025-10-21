@@ -1,490 +1,596 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="description"
-        content="Adaptive Feedback Selection">
-  <meta name="keywords" content="AFS">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="description" content="Adaptive Feedback Selection" />
+  <meta name="keywords" content="AFS" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Adaptive Querying for Reward Learning from Human Feedback</title>
 
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
+  <!-- Preconnects for faster font loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    function gtag() {
-      dataLayer.push(arguments);
-    }
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet" />
+  <link rel="stylesheet" href="./static/css/bulma.min.css" />
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css" />
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css" />
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" />
+  <link rel="stylesheet" href="./static/css/index.css" />
+  <link rel="icon" href="./static/images/favicon.svg" />
 
-    gtag('js', new Date());
-
-    gtag('config', 'G-PYVRSFMDRL');
-  </script> -->
-
-  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
-        rel="stylesheet">
-
-  <link rel="stylesheet" href="./static/css/bulma.min.css">
-  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
-  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
-  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="icon" href="./static/images/favicon.svg">
-
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <!-- MathJax config BEFORE script -->
   <script>
     window.MathJax = {
       tex: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']]
-      }
+      },
+      options: { renderActions: { addMenu: [] } }
     };
   </script>
+  <script defer id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
   <script defer src="./static/js/fontawesome.all.min.js"></script>
-  <script src="./static/js/bulma-carousel.min.js"></script>
-  <script src="./static/js/bulma-slider.min.js"></script>
-  <script src="./static/js/index.js"></script>
+  <script defer src="./static/js/bulma-carousel.min.js"></script>
+  <script defer src="./static/js/bulma-slider.min.js"></script>
+  <script defer src="./static/js/index.js"></script>
+
+  <!-- ====== AFS Page Styles ====== -->
+  <style>
+    :root{
+      --afs-accent: #3b82f6;            /* blue-500 */
+      --afs-ink:   #1f2937;             /* gray-800 */
+      --afs-ink-2: #374151;             /* gray-700 */
+      --afs-muted: #6b7280;             /* gray-500 */
+      --afs-bg:    #ffffff;
+      --afs-card:  #f9fafb;             /* gray-50 */
+      --afs-border:#e5e7eb;             /* gray-200 */
+      --shadow-1:  0 1px 2px rgba(0,0,0,.05);
+      --shadow-2:  0 6px 18px rgba(0,0,0,.12);
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --afs-bg:#0b0f14; --afs-ink:#e5e7eb; --afs-ink-2:#cbd5e1; --afs-muted:#94a3b8;
+        --afs-card:#0f172a; --afs-border:#1f2937;
+      }
+      body { background: var(--afs-bg); }
+    }
+
+    html { scroll-behavior: smooth; }
+    body { color: var(--afs-ink); }
+
+    /* Typography trims */
+    h1,h2,h3 { color: var(--afs-ink); }
+
+    /* Titles underline accent */
+    .afs-title {
+      display:inline-block;
+      padding-bottom:.25rem;
+      margin-bottom:.75rem;
+      border-bottom: 3px solid;
+      border-image: linear-gradient(90deg, var(--afs-accent), transparent) 1;
+    }
+
+    /* Section padding */
+    .section { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+    .section + hr { margin: .75rem 0; border: 1px solid var(--afs-border); }
+
+    /* Content */
+    .content.has-text-justified p { line-height: 1.85; }
+    .content ul { margin-left: 1.25rem; }
+    .content li { margin:.35rem 0; }
+
+    /* Cards / frames */
+    .afs-card {
+      background: var(--afs-card);
+      border: 1px solid var(--afs-border);
+      border-radius: 14px;
+      padding: 1rem;
+      box-shadow: var(--shadow-1);
+    }
+
+    /* Figures */
+    .afs-figure { margin: 1rem 0 1.5rem; }
+    .afs-figure .afs-img {
+      width: 100%; height: auto; display:block;
+      border-radius: 10px; border: 1px solid var(--afs-border);
+      transition: transform .2s ease, box-shadow .2s ease;
+      cursor: zoom-in;
+    }
+    .afs-figure .afs-img:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+    .afs-caption { color: var(--afs-muted); font-size: .9rem; margin-top: .5rem; text-align:center; }
+
+    /* Subsection headers */
+    .afs-subtitle {
+      font-weight: 700;
+      font-size: clamp(1rem, .95rem + .3vw, 1.05rem);
+      margin: 1.25rem 0 .5rem;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* Section nav (pills) */
+    .afs-nav { display:flex; flex-wrap: wrap; gap:.5rem; justify-content:center; margin: .5rem 0 1.25rem; }
+    .afs-pill {
+      padding:.5rem .75rem; border:1px solid var(--afs-border); background:#fff;
+      border-radius:999px; font-size:.9rem; color:#111827; transition: all .15s ease; text-decoration:none;
+    }
+    .afs-pill:hover { border-color: var(--afs-accent); color: var(--afs-accent); transform: translateY(-1px); }
+    @media (prefers-color-scheme: dark){ .afs-pill{ background: var(--afs-card); color: var(--afs-ink); } }
+
+    /* Row for Critical States */
+    .afs-step-row { display:flex; gap:2rem; align-items:flex-start; }
+    .afs-step-left  { flex: 0 1 58%; max-width: 58%; }
+    .afs-step-right {
+        flex: 1 1 70%;           /* make the block itself slightly wider */
+        max-width: 70%;
+        margin-left: -2rem;      /* pull closer to the bullets */
+      }
+    @media (max-width: 1023px){
+      .afs-step-row { flex-direction: column; }
+      .afs-step-left, .afs-step-right { max-width: 100%; }
+      .afs-step-right {margin-left: 0; max-width: 100%;}
+      .afs-step-right .afs-figure {transform: none;}
+    }
+
+
+    /* Bullets (no justification) */
+    .afs-steps, .afs-steps li, .afs-step-left ul { text-align: left !important; }
+    .afs-steps { font-size:1.15rem; line-height:1.6; list-style: disc outside; padding-left:1.25rem; margin:0; }
+    .afs-steps li + li { margin-top:.9rem; }
+
+    /* Callout component (themeable + hover) */
+    .afs-callout {
+      padding: .85rem 1rem;
+      border: 1px solid var(--afs-border);
+      border-radius: 12px;
+      margin: .75rem 0;
+      box-shadow: var(--shadow-1);
+      transition: transform .25s ease, box-shadow .25s ease, filter .25s ease;
+    }
+    .afs-callout:hover { transform: translateY(-4px); box-shadow: var(--shadow-2); filter: brightness(1.03); }
+    @media (hover: none){ .afs-callout:hover { transform:none; box-shadow: var(--shadow-1); filter:none; } }
+
+    /* Callout variants (backgrounds) */
+    .afs-callout.default { background: #cad6fd; }
+    .afs-callout.yellow  { background: #FFFBEA; }
+    .afs-callout.green   { background: #ECFDF5; }
+    .afs-callout.red     { background: #FEF2F2; }
+    .afs-callout.gray    { background: #F9FAFB; }
+
+    .afs-callout .label { font-weight: normal; display:block; margin-bottom:.35rem; color: var(--afs-ink-2); }
+    .afs-callout .note  { color:#000; font-size:1rem; margin-top:.4rem; line-height:1.4; }
+    .afs-callout .note span { display:inline-block; min-width: 2.2rem; margin-right:.25rem; }
+    .afs-callout .MathJax, .afs-callout mjx-container { font-size: .95em !important; } /* keep equation compact */
+
+    /* Right figure padding/frame */
+    .afs-step-right .afs-figure {
+        padding: 1.5rem;        /* less internal padding = more visible image */
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transform: scale(1.05);  /* gently enlarge the entire figure */
+        transform-origin: left center; /* expand toward the left side */
+      }
+    .afs-step-right .afs-img { width: 100%; height: auto; }
+
+    /* Size modifiers for figure image if needed */
+    .afs-step-right .afs-figure.small .afs-img { width: 70%; margin: 0 auto; display: block; }
+    .afs-step-right .afs-figure.large .afs-img { width: 100%; } /* keep at 100% to avoid overflow */
+
+    /* Lightbox modal */
+    .afs-modal { position: fixed; inset:0; z-index: 60; display:none; background: rgba(0,0,0,.6); }
+    .afs-modal.is-active { display:flex; align-items:center; justify-content:center; }
+    .afs-modal img { max-width: min(95vw, 1200px); max-height: 90vh; border-radius: 10px; background:#fff; }
+    .afs-modal .close {
+      position:absolute; top:20px; right:24px; background:#111827; color:#fff;
+      border:none; border-radius:8px; padding:.45rem .6rem; cursor:pointer;
+    }
+
+    /* Utility: center a single image (when not using figure) */
+    .afs-center { display:block; margin-inline: auto; }
+
+    /* bigger image without breaking layout */
+    .afs-step-right .afs-figure.bigger .afs-img {
+      width: 110%;
+      max-width: none;
+      margin-left: -5%;      /* centers the 110% */
+    }
+  </style>
 </head>
+
 <body>
-
-
-<section class="hero">
-  <div class="hero-body">
-    <div class="container is-max-desktop">
-      <div class="columns is-centered">
-        <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">Adaptive Querying for Reward Learning from Human Feedback</h1>
-          <div class="is-size-5 publication-authors">
-            <span class="author-block">
-              <a href="https://yashwanthi.xyz">Yashwanthi Anand</a></span>,
-            <span class="author-block">
-              <a href="https://nnamd.github.io">Nnamdi Nwagwu</a></span>,
-            <span class="author-block">
-              <a href="">Kevin Sabbe</a></span>,
-            <span class="author-block">
-              <a href="https://naomifitter.com">Naomi T. Fitter</a>,
-            </span>
-            <span class="author-block">
-              <a href="https://www.sandhyasai.com">Sandhya Saisubramanian</a>
-            </span>
-          </div>
-
-          <div class="is-size-5 publication-authors">
-            <span class="author-block">Oregon State University</span>
-          </div>
-
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
           <div class="column has-text-centered">
-            <div class="publication-links">
-              <!-- PDF Link. -->
+            <h1 class="title is-1 publication-title">Adaptive Querying for Reward Learning from Human Feedback</h1>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><a href="https://yashwanthi.xyz">Yashwanthi Anand</a></span>,
+              <span class="author-block"><a href="https://nnamd.github.io">Nnamdi Nwagwu</a></span>,
+              <span class="author-block"><a href="https://www.linkedin.com/in/kevin-a-sabbe/">Kevin Sabbe</a></span>,
+              <span class="author-block"><a href="https://naomifitter.com">Naomi T. Fitter</a></span>,
+              <span class="author-block"><a href="https://www.sandhyasai.com">Sandhya Saisubramanian</a></span>
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Oregon State University</span>
+            </div>
+
+            <div class="column has-text-centered">
+              <div class="publication-links" role="group" aria-label="Links to paper, video, code, appendix">
                 <span class="link-block">
-                  <!-- ./static/papers/Adaptive_Querying_for_Reward_Learning_from_Human_Feedback.pdf -->
-                <a href=""
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                    <i class="fas fa-file-pdf"></i>
-                  </span>
-                  <span>Paper</span>
-                </a>
+                  <a href="" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span>
+                  </a>
                 </span>
-              <!-- Video Link. -->
-              <span class="link-block">
-                <!-- https://oregonstate.box.com/s/ie4w5mj4r00okuf8pb4ygpq9ifixae4a -->
-                <a href=""
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fab fa-youtube"></i>
-                  </span>
-                  <span>Video</span>
-                </a>
-              </span>
-              <!-- Code Link. -->
-              <span class="link-block">
-                <a href="https://github.com/yashianand/AFS"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fab fa-github"></i>
-                  </span>
-                  <span>Code</span>
+                <span class="link-block">
+                  <a href="https://drive.google.com/file/d/1sEb6Zkbhkezw0XBq15DQ_Qsb0POn370p/view?usp=sharing" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-youtube"></i></span><span>Video</span>
                   </a>
-              </span>
-              <!-- Appendix Link. -->
-              <span class="link-block">
-                <a href=""
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="far fa-images"></i>
-                  </span>
-                  <span>Appendix</span>
+                </span>
+                <span class="link-block">
+                  <a href="https://github.com/yashianand/AFS" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
                   </a>
+                </span>
+                <span class="link-block">
+                  <a href="" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="far fa-images"></i></span><span>Appendix</span>
+                  </a>
+                </span>
+              </div>
             </div>
 
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="hero teaser">
-  <div class="container is-max-desktop">
-    <div class="hero-body">
-      <div class="has-text-centered">
-        <img src="./static/images/fig1.png" alt="Kinova arm with optimal trajectory" style="max-width: 100%; height: auto;">
-      </div>
-      <h2 class="subtitle has-text-centered">
-        The proposed Adaptive Feedback Selection (AFS) efficiently queries humans in different formats across the state space to learn a reward function and mitigate NSEs.      </h2>
-    </div>
-  </div>
-</section>
-
-
-<!-- ====== AFS Page Styles (drop in once) ====== -->
-<style>
-  :root{
-    --afs-accent: #3b82f6; /* Tailwind blue-500 */
-    --afs-ink: #1f2937;    /* gray-800 */
-    --afs-muted: #6b7280;  /* gray-500 */
-    --afs-bg: #ffffff;
-    --afs-card: #f9fafb;   /* gray-50 */
-  }
-  html { scroll-behavior: smooth; }
-  body { color: var(--afs-ink); }
-
-  /* Titles */
-  .afs-title {
-    display:inline-block;
-    padding-bottom:.25rem;
-    margin-bottom:.75rem;
-    border-bottom: 3px solid;
-    border-image: linear-gradient(90deg, var(--afs-accent), transparent) 1;
-  }
-
-  /* Section container refinements */
-  .section { padding-top: 2.5rem; padding-bottom: 2.5rem; }
-  .section + hr { margin: .75rem 0; border: 1px solid #e5e7eb; }
-
-  /* Content */
-  .content.has-text-justified p { line-height: 1.85; }
-  .content ul { margin-left: 1.25rem; }
-  .content li { margin:.35rem 0; }
-
-  /* Cards / frames for visuals */
-  .afs-card {
-    background: var(--afs-card);
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 1rem;
-    box-shadow: 0 1px 1px rgba(0,0,0,.03);
-  }
-
-  /* Image presentation */
-  .afs-figure { margin: 1rem 0 1.5rem; }
-  .afs-figure .afs-img {
-    width: 100%;
-    height: auto;
-    display:block;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    transition: transform .2s ease, box-shadow .2s ease;
-    cursor: zoom-in;
-  }
-  .afs-figure .afs-img:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,.08);
-  }
-  .afs-caption {
-    color: var(--afs-muted);
-    font-size: .9rem;
-    margin-top: .5rem;
-    text-align:center;
-  }
-
-  /* Subsection headers (1/2/3 in overview) */
-  .afs-subtitle {
-    font-weight: 700;
-    font-size: 1.05rem;
-    margin: 1.25rem 0 .5rem;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  /* Grid helpers */
-  .afs-grid {
-    display:grid;
-    gap: 1rem;
-  }
-  @media (min-width: 900px){
-    .afs-grid.cols-2 { grid-template-columns: 1fr 1fr; }
-  }
-
-  /* Section nav (pills) */
-  .afs-nav {
-    display:flex; flex-wrap: wrap; gap:.5rem;
-    justify-content:center;
-    margin: .5rem 0 1.25rem;
-  }
-  .afs-pill {
-    padding:.5rem .75rem;
-    border:1px solid #e5e7eb;
-    background:#fff;
-    border-radius:999px;
-    font-size:.9rem;
-    color:#111827;
-    transition: all .15s ease;
-    text-decoration:none;
-  }
-  .afs-pill:hover {
-    border-color: var(--afs-accent);
-    color: var(--afs-accent);
-    transform: translateY(-1px);
-  }
-
-  /* Lightbox modal */
-  .afs-modal {
-    position: fixed; inset:0; z-index: 60; display:none;
-    background: rgba(0,0,0,.6);
-  }
-  .afs-modal.is-active { display:flex; align-items:center; justify-content:center; }
-  .afs-modal img {
-    max-width: min(95vw, 1200px);
-    max-height: 90vh;
-    border-radius: 10px;
-    background:#fff;
-  }
-  .afs-modal .close {
-    position:absolute; top:20px; right:24px;
-    background:#111827; color:#fff; border:none; border-radius:8px;
-    padding:.4rem .6rem; cursor:pointer;
-  }
-</style>
-
-<!-- ====== Section Nav (anchors match the ids below) ====== -->
-<nav class="afs-nav">
-  <a class="afs-pill" href="#abstract">Abstract</a>
-  <a class="afs-pill" href="#overview">Overview</a>
-  <a class="afs-pill" href="#sim-exps">Simulation</a>
-  <a class="afs-pill" href="#human-sim">Human Study (in Sim)</a>
-  <a class="afs-pill" href="#kinova">Kinova Study</a>
-</nav>
-
-<section class="section" id="abstract">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3 afs-title">Abstract</h2>
-        <div class="content has-text-justified">
-          <!-- (unchanged content) -->
-          <p>
-          Learning from human feedback is a popular approach to train robots to
-          adapt to user preferences and improve safety. Existing approaches
-          typically consider a single querying (interaction) format when seeking
-          human feedback and do not leverage multiple modes of user interaction
-          with a robot. We examine how to learn a penalty function associated
-          with unsafe behaviors using <i>multiple</i> forms of human feedback,
-          by optimizing the <i>query state</i> and <i>feedback format</i>.
-          Our proposed <i>adaptive feedback selection</i> is an iterative,
-          two-phase approach which first selects
-          critical states for querying, and then uses information gain to
-          select a feedback format for querying across the sampled critical
-          states. The feedback format selection also accounts for the cost and
-          probability of receiving feedback in a certain format.
-         </p>
-          <p>
-            Our experiments in simulation demonstrate the sample efficiency of
-            our approach in learning to avoid undesirable behaviors. The results
-            of our user study with a physical robot highlight the practicality
-            and effectiveness of adaptive feedback selection in seeking
-            informative, user-aligned feedback that accelerate learning.
-          </p>
+  <!-- TEASER -->
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <div class="has-text-centered">
+          <img
+            src="./static/images/fig1.png"
+            alt="Kinova arm with optimal trajectory"
+            class="afs-center"
+            loading="lazy"
+            decoding="async"
+            style="max-width:100%; height:auto;" />
         </div>
+        <h2 class="subtitle has-text-centered">
+          The proposed Adaptive Feedback Selection (AFS) efficiently queries humans in different formats across the state space to learn a reward function and mitigate NSEs.
+        </h2>
       </div>
     </div>
-    <hr>
-  </div>
-</section>
+  </section>
 
-<section class="section" id="overview">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3 has-text-centered afs-title">Overview of the Solution Approach</h2>
+  <!-- NAV -->
+  <nav class="afs-nav" aria-label="Section navigation">
+    <a class="afs-pill" href="#abstract">Abstract</a>
+    <a class="afs-pill" href="#overview">Overview</a>
+    <a class="afs-pill" href="#sim-exps">Simulation</a>
+    <a class="afs-pill" href="#human-sim">Human Study (in Sim)</a>
+    <a class="afs-pill" href="#kinova">Kinova Study</a>
+  </nav>
 
-        <figure class="afs-figure afs-card">
-          <img class="afs-img" src="./static/images/framework_overview.png" alt="Overview of Adaptive Feedback Selection" data-lightbox alt-src="./static/images/framework_overview.png">
-          <figcaption class="afs-caption">High-level AFS workflow.</figcaption>
-        </figure>
-
-        <div class="content has-text-justified">
-          <p class="is-size-5">
-            The critical states \( \Omega \) for querying are selected by
-            clustering the states. A feedback format \(f^*\) that maximizes
-            information gain is selected for querying the user across \( \Omega \).
-            The NSE model is iteratively refined based on feedback. An updated
-            policy is calculated using a penalty function \( \hat{R}_N \), derived
-            from the learned NSE model.
-          </p>
-
-          <div class="afs-subtitle">1. Critical States Selection</div>
-          <img class="afs-img" src="./static/images/cs_selection.png" alt="Critical States Selection" data-lightbox alt-src="./static/images/cs_selection.png">
-
-          <div class="afs-subtitle">2. Feedback Format Selection</div>
-          <img class="afs-img" src="./static/images/ff_selection.png" alt="Feedback Format Selection" data-lightbox alt-src="./static/images/ff_selection.png">
-
-          <div class="afs-subtitle">3. Stopping Criteria</div>
-          <img class="afs-img" src="./static/images/stopping_criteria.png" alt="Stopping Criteria" data-lightbox alt-src="./static/images/stopping_criteria.png">
-        </div>
-      </div>
-    </div>
-    <hr>
-  </div>
-</section>
-
-<section class="section" id="sim-exps">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3 has-text-centered afs-title">Experiments in Simulation</h2>
-
-        <h3 class="is-size-5 has-text-weight-semibold" style="text-align:left">
-          <span style="font-weight:bold;">Primary Task:</span> To optimize shortest distance to the destination
-        </h3>
-
-        <div class="afs-card">
-          <div class="content has-text-left" style="margin-bottom:0">
-            <p class="has-text-left"><span style="font-weight: bold;">Baselines used:</span></p>
-            <ol>
-              <li><i style="font-weight: bold;">Naive Agent:</i> Executes main policy without learning about NSEs (upper bound on NSE penalty).</li>
-              <li><i style="font-weight: bold;">Oracle:</i> Has full knowledge of $R^T$ and $R^N$ (lower bound on NSE penalty).</li>
-              <li><i style="font-weight: bold;">Reward Inference (RI):</i> Learns via first modeling $\beta$ <a href="https://arxiv.org/abs/2208.10687">(Ghosal et al., 2023)</a>.</li>
-              <li><i style="font-weight: bold;">Cost-Sensitive:</i> Chooses feedback with the lowest cost given the feedback preference model $D$.</li>
-              <li><i style="font-weight: bold;">Most-Probable Feedback:</i> Selects the feedback format most likely preferred by the human.</li>
-              <li><i style="font-weight: bold;">Random Critical States:</i> Uses AFS to learn about NSEs, while sampling critical states randomly.</li>
-            </ol>
+  <!-- ABSTRACT -->
+  <section class="section" id="abstract">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3 afs-title">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Learning from human feedback is a popular approach to train robots to
+              adapt to user preferences and improve safety. Existing approaches
+              typically consider a single querying (interaction) format when seeking
+              human feedback and do not leverage multiple modes of user interaction
+              with a robot. We examine how to learn a penalty function associated
+              with unsafe behaviors using <i>multiple</i> forms of human feedback,
+              by optimizing the <i>query state</i> and <i>feedback format</i>.
+              Our proposed <i>adaptive feedback selection</i> is an iterative,
+              two-phase approach which first selects
+              critical states for querying, and then uses information gain to
+              select a feedback format for querying across the sampled critical
+              states. The feedback format selection also accounts for the cost and
+              probability of receiving feedback in a certain format.
+            </p>
+            <p>
+              Our experiments in simulation demonstrate the sample efficiency of
+              our approach in learning to avoid undesirable behaviors. The results
+              of our user study with a physical robot highlight the practicality
+              and effectiveness of adaptive feedback selection in seeking
+              informative, user-aligned feedback that accelerate learning.
+            </p>
           </div>
         </div>
+      </div>
+      <hr />
+    </div>
+  </section>
 
-        <h3 class="is-size-6 has-text-weight-bold has-text-left" style="margin-top:1rem">Domains</h3>
-          <img class="afs-img" src="./static/images/domains_in_sim.png" alt="Domains used in Sim" data-lightbox alt-src="./static/images/domains_in_sim.png">
+  <!-- OVERVIEW -->
+  <section class="section" id="overview">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3 has-text-centered afs-title">Overview of the Solution Approach</h2>
 
-        <h3 class="is-size-6 has-text-weight-bold has-text-left">Results</h3>
+          <figure class="afs-figure afs-card">
+            <img
+              class="afs-img"
+              src="./static/images/framework_overview.png"
+              alt="Overview of Adaptive Feedback Selection"
+              data-lightbox
+              alt-src="./static/images/framework_overview.png"
+              loading="lazy"
+              decoding="async" />
+            <figcaption class="afs-caption">High-level AFS workflow.</figcaption>
+          </figure>
 
-        <div class="content has-text-left">
-          <p>1. Average penalty across 100 trials</p>
+          <div class="content has-text-justified">
+            <p class="is-size-5">
+              The critical states \( \Omega \) for querying are selected by
+              clustering the states. A feedback format \(f^*\) that maximizes
+              information gain is selected for querying the user across \( \Omega \).
+              The NSE model is iteratively refined based on feedback. An updated
+              policy is calculated using a penalty function \( \hat{R}_N \), derived
+              from the learned NSE model.
+            </p>
+
+            <div class="afs-subtitle">1. Critical States Selection</div>
+
+            <div class="afs-step-row">
+              <!-- Left: bullets + compact callout -->
+              <div class="afs-step-left">
+                <ul class="afs-steps">
+                  <li>Cluster state space into $K$ clusters</li>
+                  <li>
+                    Identify cluster $k \in K$ that has a high information gain for NSE discovery
+                    <div class="afs-callout default">
+                      <span class="label">Information gain of a cluster $k$</span>
+                      $$ IG(k)^t \!=\! \frac{1}{\left|\Omega_k^{t-1}\right|}\;
+                         \sum_{s\in \Omega_k^{t-1}} D_{KL}\!\left(\hat{p}^{\,t}\,\big\|\,\hat{q}^{\,t-1}\right) $$
+                      <div class="note">
+                        <span>$\hat{p}:$</span> True NSE distribution<br />
+                        <span>$\hat{q}:$</span> Learned NSE distribution
+                      </div>
+                    </div>
+                  </li>
+                  <li>Select critical states, $\Omega$, at random based on the cluster weights.</li>
+                </ul>
+              </div>
+
+              <div class="afs-step-right">
+                <figure class="afs-figure bigger">
+                  <img
+                    class="afs-img"
+                    src="./static/images/cs_selection_illustration.png"
+                    alt="Critical States Selection Illustration"
+                    data-lightbox
+                    alt-src="./static/images/cs_selection_illustration.png"
+                    loading="lazy"
+                    decoding="async" />
+                </figure>
+              </div>
+            </div>
+
+            <div class="afs-subtitle">2. Feedback Format Selection</div>
+            <img
+              class="afs-img"
+              src="./static/images/ff_selection.png"
+              alt="Feedback Format Selection"
+              data-lightbox
+              alt-src="./static/images/ff_selection.png"
+              loading="lazy"
+              decoding="async" />
+
+            <div class="afs-subtitle">3. Stopping Criteria</div>
+            <img
+              class="afs-img"
+              src="./static/images/stopping_criteria.png"
+              alt="Stopping Criteria"
+              data-lightbox
+              alt-src="./static/images/stopping_criteria.png"
+              loading="lazy"
+              decoding="async" />
+          </div>
         </div>
-          <img class="afs-img" src="./static/images/results_in_sim.png" alt="Average NSE penalty across 100 trials in Sim" data-lightbox alt-src="./static/images/results_in_sim.png">
+      </div>
+      <hr />
+    </div>
+  </section>
 
-        <div class="content has-text-left">
-          <p>2. Average penalty with different clustering algorithms and number of clusters ($K$)</p>
+  <!-- SIMULATION -->
+  <section class="section" id="sim-exps">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3 has-text-centered afs-title">Experiments in Simulation</h2>
+
+          <h3 class="is-size-5 has-text-weight-semibold" style="text-align:left">
+            <span style="font-weight:bold;">Primary Task:</span> To optimize shortest distance to the destination
+          </h3>
+
+          <div class="afs-card">
+            <div class="content has-text-left" style="margin-bottom:0">
+              <p class="has-text-left"><span style="font-weight: bold;">Baselines used:</span></p>
+              <ol>
+                <li><i style="font-weight: bold;">Naive Agent:</i> Executes main policy without learning about NSEs (upper bound on NSE penalty).</li>
+                <li><i style="font-weight: bold;">Oracle:</i> Has full knowledge of $R^T$ and $R^N$ (lower bound on NSE penalty).</li>
+                <li><i style="font-weight: bold;">Reward Inference (RI):</i> Learns via first modeling $\beta$ <a href="https://arxiv.org/abs/2208.10687">(Ghosal et al., 2023)</a>.</li>
+                <li><i style="font-weight: bold;">Cost-Sensitive:</i> Chooses feedback with the lowest cost given the feedback preference model $D$.</li>
+                <li><i style="font-weight: bold;">Most-Probable Feedback:</i> Selects the feedback format most likely preferred by the human.</li>
+                <li><i style="font-weight: bold;">Random Critical States:</i> Uses AFS to learn about NSEs, while sampling critical states randomly.</li>
+              </ol>
+            </div>
+          </div>
+
+          <h3 class="is-size-6 has-text-weight-bold has-text-left" style="margin-top:1rem">Domains</h3>
+          <img
+            class="afs-img"
+            src="./static/images/domains_in_sim.png"
+            alt="Domains used in Sim"
+            data-lightbox
+            alt-src="./static/images/domains_in_sim.png"
+            loading="lazy"
+            decoding="async" />
+
+          <h3 class="is-size-6 has-text-weight-bold has-text-left">Results</h3>
+
+          <div class="content has-text-left"><p>1. Average penalty across 100 trials</p></div>
+          <img
+            class="afs-img"
+            src="./static/images/results_in_sim.png"
+            alt="Average NSE penalty across 100 trials in Sim"
+            data-lightbox
+            alt-src="./static/images/results_in_sim.png"
+            loading="lazy"
+            decoding="async" />
+
+          <div class="content has-text-left"><p>2. Average penalty with different clustering algorithms and number of clusters ($K$)</p></div>
+          <img
+            class="afs-img"
+            src="./static/images/diff_clusters_in_sim.png"
+            alt="Average penalty with different clustering methods"
+            data-lightbox
+            alt-src="./static/images/diff_clusters_in_sim.png"
+            loading="lazy"
+            decoding="async" />
+
+          <div class="content has-text-left"><p>3. Average penalty incurred by AFS operating with and without the stopping criteria</p></div>
+          <img
+            class="afs-img afs-center"
+            src="./static/images/stopping_criteria_penalty.png"
+            alt="Average penalty with different stopping criteria"
+            data-lightbox
+            alt-src="./static/images/stopping_criteria_penalty.png"
+            loading="lazy"
+            decoding="async"
+            style="width: 50%; height: auto;" />
+
+          <br />
+
+          <h2 class="title is-3 has-text-centered afs-title" id="human-sim">Human Subjects Study in Simulation</h2>
+          <img
+            class="afs-img"
+            src="./static/images/vase_user_study.png"
+            alt="Average penalty in the human subjects study in simulation"
+            data-lightbox
+            alt-src="./static/images/vase_user_study.png"
+            loading="lazy"
+            decoding="async" />
+          <p class="content has-text-justified">
+            In this study, participants (N=12) interacted with a simulated autonomous
+            agent in the Vase domain to provide feedback across multiple formats through a GUI.
+            The agent learned to minimize negative side effects
+            (NSEs) while completing primary task.
+            The figure above shows both the simulation setup and the learned
+            performance, with results highlighting how adaptive querying
+            reduces the average NSE penalty.
+          </p>
+
+          <br />
+
+          <h2 class="title is-3 has-text-centered afs-title" id="kinova">In-Person User Study with Kinova Gen3 7DoF Arm</h2>
+          <img
+            class="afs-img"
+            src="./static/images/kinova_user_study.png"
+            alt="In-person user study setup with Kinova Gen3 7DoF arm"
+            data-lightbox
+            alt-src="./static/images/kinova_user_study.png"
+            loading="lazy"
+            decoding="async" />
+          <p class="content has-text-justified">
+            Extending the simulation results to a real-world setting, this
+            study evaluated human–robot interaction using a Kinova Gen3 7-DoF
+            arm performing household-style object delivery tasks. Participants (N=30)
+            provided feedback either via a GUI or by physically
+            guiding the robot.
+            The figure above shows the in-person user study setup with Kinova Gen3 7DoF arm.
+          </p>
+          <img
+            class="afs-img"
+            src="./static/images/kinova_results.png"
+            alt="Results from the in-person user study setup with Kinova Gen3 7DoF arm"
+            data-lightbox
+            alt-src="./static/images/kinova_results.png"
+            loading="lazy"
+            decoding="async" />
+          <p class="content has-text-justified">
+            Performance metrics show consistent NSE mitigation and strong user alignment with the adaptive feedback
+            strategy. Qualitative measures (trust, competence (RoSAS), and workload (NASA-TLX)) demonstrate that the adaptive approach
+            maintained safety and efficiency without increasing user effort.
+          </p>
         </div>
-          <img class="afs-img" src="./static/images/diff_clusters_in_sim.png" alt="Average penalty with different clustering methods" data-lightbox alt-src="./static/images/diff_clusters_in_sim.png">
-
-        <div class="content has-text-left">
-          <p>3. Average penalty incurred by AFS operating with and without the stopping criteria</p>
-        </div>
-          <img class="afs-img" src="./static/images/stopping_criteria_penalty.png" alt="Average penalty with different stopping criteria" data-lightbox alt-src="./static/images/stopping_criteria_penalty.png" style="width: 50%; height: auto; display: block; margin: 0 auto;">
-
-        <br></br>
-
-        <h2 class="title is-3 has-text-centered afs-title" id="human-sim">Human Subjects Study in Simulation</h2>
-          <img class="afs-img" src="./static/images/vase_user_study.png" alt="Average penalty in the human subjects study in simulation" data-lightbox alt-src="./static/images/vase_user_study.png">
-        <p class="content has-text-justified">
-          In this study, participants (N=12) interacted with a simulated autonomous
-          agent in the Vase domain to provide feedback across multiple formats through a GUI.
-          The agent learned to minimize negative side effects
-          (NSEs) while completing primary task.
-          The figure above shows both the simulation setup and the learned
-          performance, with results highlighting how adaptive querying
-          reduces the average NSE penalty.
-        </p>
-        <br></br>
-
-        <h2 class="title is-3 has-text-centered afs-title" id="kinova">In-Person User Study with Kinova Gen3 7DoF Arm</h2>
-        <!-- <figure class="afs-figure"> -->
-          <img class="afs-img" src="./static/images/kinova_user_study.png" alt="In-person user study setup with Kinova Gen3 7DoF arm" data-lightbox alt-src="./static/images/kinova_user_study.png">
-        <!-- </figure> -->
-        <p class="content has-text-justified">
-          Extending the simulation results to a real-world setting, this
-          study evaluated human–robot interaction using a Kinova Gen3 7-DoF
-          arm performing household-style object delivery tasks. Participants (N=30)
-          provided feedback either via a GUI or by physically
-          guiding the robot.
-          The figure above shows the in-person user study setup with Kinova Gen3 7DoF arm.
-        </p>
-        <!-- <figure class="afs-figure"> -->
-          <img class="afs-img" src="./static/images/kinova_results.png" alt="Results from the in-person user study setup with Kinova Gen3 7DoF arm" data-lightbox alt-src="./static/images/kinova_results.png">
-        <!-- </figure> -->
-        <p class="content has-text-justified">
-          Performance metrics show consistent NSE mitigation and strong user alignment with the adaptive feedback
-          strategy. Qualitative measures (trust, competence (RoSAS), and workload (NASA-TLX)) demonstrate that the adaptive approach
-          maintained safety and efficiency without increasing user effort.
-        </p>
       </div>
     </div>
+  </section>
+
+  <!-- LIGHTBOX -->
+  <div class="afs-modal" id="afsLightbox" aria-hidden="true" role="dialog" aria-label="Image viewer">
+    <button class="close" type="button" aria-label="Close image viewer">Close</button>
+    <img alt="" />
   </div>
-</section>
 
-<!-- ====== Lightweight Lightbox (no deps) ====== -->
-<div class="afs-modal" id="afsLightbox" aria-hidden="true">
-  <button class="close" aria-label="Close">Close</button>
-  <img alt="">
-</div>
-<script>
-  (function(){
-    const modal = document.getElementById('afsLightbox');
-    const img   = modal.querySelector('img');
-    const close = modal.querySelector('.close');
-    function open(src){ img.src = src; modal.classList.add('is-active'); modal.setAttribute('aria-hidden','false'); }
-    function hide(){ modal.classList.remove('is-active'); modal.setAttribute('aria-hidden','true'); img.src=''; }
-    document.addEventListener('click', (e)=>{
-      const t = e.target.closest('[data-lightbox]');
-      if(!t) return;
-      const src = t.getAttribute('alt-src') || t.getAttribute('src');
-      e.preventDefault();
-      open(src);
-    });
-    modal.addEventListener('click', (e)=>{ if(e.target===modal) hide(); });
-    close.addEventListener('click', hide);
-    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hide(); });
-  })();
-</script>
+  <script>
+    (function(){
+      const modal = document.getElementById('afsLightbox');
+      const img   = modal.querySelector('img');
+      const close = modal.querySelector('.close');
 
+      function open(src){
+        img.src = src;
+        modal.classList.add('is-active');
+        modal.setAttribute('aria-hidden','false');
+        close.focus();
+      }
+      function hide(){
+        modal.classList.remove('is-active');
+        modal.setAttribute('aria-hidden','true');
+        img.src='';
+      }
+      document.addEventListener('click', (e)=>{
+        const t = e.target.closest('[data-lightbox]');
+        if(!t) return;
+        const src = t.getAttribute('alt-src') || t.getAttribute('src');
+        e.preventDefault();
+        open(src);
+      });
+      modal.addEventListener('click', (e)=>{ if(e.target===modal) hide(); });
+      close.addEventListener('click', hide);
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hide(); });
+    })();
+  </script>
 
-<!-- <section class="section" id="BibTeX">
-  <div class="container is-max-desktop content">
-    <h2 class="title">BibTeX</h2>
-    <pre><code>@article{park2021nerfies,
-  author    = {Park, Keunhong and Sinha, Utkarsh and Barron, Jonathan T. and Bouaziz, Sofien and Goldman, Dan B and Seitz, Steven M. and Martin-Brualla, Ricardo},
-  title     = {Nerfies: Deformable Neural Radiance Fields},
-  journal   = {ICCV},
-  year      = {2021},
-}</code></pre>
-  </div>
-</section> -->
-
-<footer class="footer">
+  <footer class="footer">
     <div class="columns is-centered">
       <div class="column is-8">
         <div class="content">
           <div class="is-size-6 has-text-grey">
             <p id="last-modified"></p>
-            </div>
-            <script>
-            document.getElementById('last-modified').textContent = 'Last modified: ' + new Date(document.lastModified).toLocaleDateString();
-            </script>
+          </div>
+          <script>
+            document.getElementById('last-modified').textContent =
+              'Last modified: ' + new Date(document.lastModified).toLocaleDateString();
+          </script>
           <p>
-            This project website was built using this <a
-            href="https://github.com/nerfies/nerfies.github.io">source code</a>.
+            This project website was built using this
+            <a href="https://github.com/nerfies/nerfies.github.io">source code</a>.
           </p>
         </div>
       </div>
     </div>
-  </div>
-</footer>
-
+  </footer>
 </body>
 </html>
